@@ -12,7 +12,7 @@ shoulder_threshold = 0
 neck_threshold = 0
 
 # alert/status vars
-alert = 'alert.mp3'
+alert = 'alert.mp3' # your audio file
 sit = True
 alert_cooldown = 15 # seconds
 last_alert_time = 0
