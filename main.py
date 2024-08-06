@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import time, os
+from playsound import playsound
 
 # setup vars
 posture_setup_complete = False
@@ -41,11 +42,11 @@ def calculate_angle(a, b, c):
     return angle 
 
 def poor_posture_detected():
-    pass
-    # if current_time - last_alert_time > alert_cooldown:
-        # if os.path.exists(alert):
-        #     playsound(alert)
-    #     last_alert_time = current_time
+    # Ping alert
+    if current_time - last_alert_time > alert_cooldown:
+        if os.path.exists(alert):
+            playsound(alert)
+        last_alert_time = current_time
 
 
 # Initialize webcam
