@@ -77,12 +77,13 @@ while cap.isOpened():
         landmarks = pose_results.pose_landmarks.landmark
 
         # Get key body parts
-        left_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x * frame.shape[1],
-                         landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y * frame.shape[0]]
-        right_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x * frame.shape[1]
-                          ,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y * frame.shape[0]]
-        nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x * frame.shape[1],
-                landmarks[mp_pose.PoseLandmark.NOSE.value].y * frame.shape[0]]
+        frame_height, frame_width, _ = frame.shape
+        left_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x * frame_width,
+                         landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y * frame_height]
+        right_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x * frame_width
+                          ,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y * frame_height]
+        nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x * frame_width,
+                landmarks[mp_pose.PoseLandmark.NOSE.value].y * frame_height]
 
         # Calculate mid point of shoulders
         mid_shoulder = [(left_shoulder[0] + right_shoulder[0]) / 2, (left_shoulder[1] + right_shoulder[1]) / 2]
