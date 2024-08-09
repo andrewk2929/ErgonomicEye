@@ -80,8 +80,10 @@ while cap.isOpened():
         frame_height, frame_width, _ = frame.shape
         left_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x * frame_width,
                          landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y * frame_height]
+        
         right_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x * frame_width
                           ,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y * frame_height]
+        
         nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x * frame_width,
                 landmarks[mp_pose.PoseLandmark.NOSE.value].y * frame_height]
 
@@ -134,7 +136,7 @@ while cap.isOpened():
                 cv2.putText(frame,
                 f"""Poor neck and shoulder posture detected! Please sit up straight. Shoulder: {shoulder_angle:.1f}/{shoulder_threshold:.1f} Neck: {neck_angle:.1f}/{neck_threshold:.1f}""",
                 (100,50), font, 1, (255,0,0), 2, cv2.LINE_4)
-                poor_posture_detected() ###sigma
+                poor_posture_detected()
 
 
 
