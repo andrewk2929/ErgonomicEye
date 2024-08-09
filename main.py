@@ -175,3 +175,5 @@ cv2.destroyAllWindows()
 
 pose.close()
 # object_detection.close()
+
+##testing to see if it works
