@@ -134,7 +134,7 @@ while cap.isOpened():
                 cv2.putText(frame,
                 f"""Poor neck and shoulder posture detected! Please sit up straight. Shoulder: {shoulder_angle:.1f}/{shoulder_threshold:.1f} Neck: {neck_angle:.1f}/{neck_threshold:.1f}""",
                 (100,50), font, 1, (255,0,0), 2, cv2.LINE_4)
-                poor_posture_detected()
+                poor_posture_detected() ###sigma
 
 
 
