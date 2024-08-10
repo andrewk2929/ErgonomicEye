@@ -17,8 +17,8 @@ ready_to_start = False
 alert = 'alert.mp3' # your alert audio
 sit = True
 sedentary = False
-not_sitting_time = 60 # seconds
-sitting_time = 1800
+active_threshold = 60 # seconds
+sedentary_threshold = 1800 # seconds
 start_time = time.time()
 time_diff = 0
 alert_cooldown = 15 # seconds
@@ -28,9 +28,7 @@ last_alert_time = 0
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-# Initialize Mediapipe Object Detection
-# mp_object_detection = mp.solutions.object_detection
-# object_detection = mp_object_detection.ObjectDetection(min_detection_confidence=0.5)
+# Initialize Mediapipe Drawing
 mp_drawing = mp.solutions.drawing_utils
 
 # calculate posture angles
@@ -47,6 +45,7 @@ def calculate_angle(a, b, c):
         
     return angle 
 
+# when poor posture is detected
 def poor_posture_detected():
     pass
     # if current_time - last_alert_time > alert_cooldown:
@@ -72,20 +71,18 @@ while cap.isOpened():
             ready_to_start = True
     
     elif ready_to_start:    
-    
+
         if setup_frames < 25: 
             cv2.putText(frame, "Analyzing your good posture", (10,50), font, 1, (0, 0, 0), 2, cv2.LINE_4)
 
         # Convert BGR image to RGB
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Process frames with Mediapipe
+        # Process RGB frames with Mediapipe
         pose_results = pose.process(rgb_frame)
-        # object_results = object_detection.process(rgb_frame)
 
         # Draw pose landmarks
-        #detects if landmarks are visible
-
+        # Detects if landmarks are visible
         if pose_results.pose_landmarks:
             mp_drawing.draw_landmarks(
                 frame, pose_results.pose_landmarks, mp_pose.POSE_CONNECTIONS
@@ -94,9 +91,9 @@ while cap.isOpened():
             #if all landmarks detected for more than set time, you are asked to take a break
             #there's a snooze option that will reset the timer
             time_diff = time.time() - start_time 
-            if time_diff > 10:
+            if time_diff > sedentary_threshold:
                 cv2.putText(frame, 
-                f"It has been {(time_diff/60):.1f} minutes, Please Take A Break",
+                f"It has been {round(time_diff/60)} minutes, Please Take A Break",
                 (250,50), font, 1, (0,0,0), 2, cv2.LINE_AA)
                 cv2.putText(frame, "Please Press Esc To Reset",
                 (400,250), font, 1, (0,0,255), 2, cv2.LINE_AA)
@@ -131,11 +128,10 @@ while cap.isOpened():
                             (10, 30), font, 1, (0, 0, 0), 2, cv2.LINE_AA)
             
             # after 25 frames, take the average angles and set thresholds for angles
-
             elif setup_frames >= 25 and setup_frames < 40:
                 shoulder_threshold = np.mean(initial_shoulder_angles) - 10
                 neck_threshold = np.mean(initial_neck_angles) - 10
-                os.system('clear')           
+                # os.system('clear')           
                 setup_frames += 1
                 cv2.putText(frame, 
                 f"Setup complete! Shoulder threshold: {shoulder_threshold:.1f} and neck threshold: {neck_threshold:.1f}",
@@ -159,19 +155,21 @@ while cap.isOpened():
                     (100,50), font, 1, (255,0,0), 2, cv2.LINE_4)
                     poor_posture_detected()
 
+                # poor shoulder and neck posture
                 if shoulder_threshold > shoulder_angle and neck_threshold > neck_angle:
                     cv2.putText(frame,
-                    f"""Poor neck and shoulder posture detected! Please sit up straight. Shoulder: {shoulder_angle:.1f}/{shoulder_threshold:.1f} Neck: {neck_angle:.1f}/{neck_threshold:.1f}""",
+                    f"""Poor neck and shoulder posture detected! Please sit up straight. 
+                    Shoulder: {shoulder_angle:.1f}/{shoulder_threshold:.1f} Neck: {neck_angle:.1f}/{neck_threshold:.1f}""",
                     (100,50), font, 1, (255,0,0), 2, cv2.LINE_4)
                     poor_posture_detected()
-                print (nose, left_shoulder, right_shoulder)
+                # print(nose, left_shoulder, right_shoulder)
                 
         else: 
-            if (time.time() - (start_time + time_diff)) > 15:
+            if (time.time() - (start_time + time_diff)) > active_threshold:
                 start_time = time.time()
 
     #Display the frame
-    cv2.imshow('MediaPipe Pose Detection', frame)
+    cv2.imshow('ErgonomicEye', frame)
 
     # Quit on 'q'
     if cv2.waitKey(1) & 0xFF == ord('q'):
