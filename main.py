@@ -54,32 +54,11 @@ def poor_posture_detected():
         #     playsound(alert)
     #     last_alert_time = current_time
 
-def sitting(current_time):
-    while True:
-        if nose:
-            if time.time() - current_time > sitting_time:
-                sedentary = True
-        if not nose:
-            if time.time() - current_time > not_sitting_time:
-                sit = False
-                sedentary = False
-        
-        if sedentary:
-            cv2.putText(frame, 
-            "You've been sitting for over 30 minutes, try and take a 5 minute active break",
-            (50,50), font, 1, (0,0,0), 2, cv2.LINE_AA)
-
-
-def not_sitting(time):
-    while not nose:
-        if time.time() - time > not_sitting_time:
-            sit = False
-            break
 
 # Initialize webcam
 cap = cv2.VideoCapture(0)
 while cap.isOpened():
-    keyInput = cv2.waitKey(1)
+    keyInput = cv2.waitKey(100)
     ret, frame = cap.read()
 
     if not ret:
@@ -87,14 +66,15 @@ while cap.isOpened():
         break
     
     if not ready_to_start:
-        cv2.putText(frame, "Please Sit Straight. When Ready Hit Space To Launch", (50,50), font, 1, (0, 0, 0), 2, cv2.LINE_4)
+        cv2.putText(frame, "Hit 'q' At Anytime To Quit Out", (400,250), font, 1, (0, 0, 255), 2, cv2.LINE_4)
+        cv2.putText(frame, "Please Sit Straight. When Ready Hit Space To Launch", (250,50), font, 1, (0, 0, 255), 2, cv2.LINE_4)
         if keyInput == ord(' '):
             ready_to_start = True
     
     elif ready_to_start:    
     
-        if setup_frames < 50: 
-            cv2.putText(frame, "Analyzing your good posture", (50,50), font, 1, (0, 0, 0), 2, cv2.LINE_4)
+        if setup_frames < 25: 
+            cv2.putText(frame, "Analyzing your good posture", (10,50), font, 1, (0, 0, 0), 2, cv2.LINE_4)
 
         # Convert BGR image to RGB
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -114,12 +94,12 @@ while cap.isOpened():
             #if all landmarks detected for more than set time, you are asked to take a break
             #there's a snooze option that will reset the timer
             time_diff = time.time() - start_time 
-            if time_diff > 30:
+            if time_diff > 10:
                 cv2.putText(frame, 
                 f"It has been {(time_diff/60):.1f} minutes, Please Take A Break",
-                (70,80), font, 1, (0,0,0), 2, cv2.LINE_AA)
+                (250,50), font, 1, (0,0,0), 2, cv2.LINE_AA)
                 cv2.putText(frame, "Please Press Esc To Reset",
-                (270,280), font, 1, (0,0,0), 2, cv2.LINE_AA)
+                (400,250), font, 1, (0,0,255), 2, cv2.LINE_AA)
                 if keyInput == 27:
                     start_time = time.time()
 
@@ -143,28 +123,28 @@ while cap.isOpened():
             # neck_angle = calculate_angle(mid_shoulder, nose, [nose[0], mid_shoulder[1]])
 
             # setting up baseline angles from first 25 frames
-            if not posture_setup_complete and setup_frames < 50:
+            if setup_frames < 25:
                 initial_shoulder_angles.append(shoulder_angle)
                 initial_neck_angles.append(neck_angle)
                 setup_frames += 1
-                cv2.putText(frame, f"Gathering data... {setup_frames}/50", 
+                cv2.putText(frame, f"Gathering data... {setup_frames}/25", 
                             (10, 30), font, 1, (0, 0, 0), 2, cv2.LINE_AA)
             
-            # after 50 frames, take the average angles and set thresholds for angles
-            ## TODO, MAKE TEXT DISPLAY LONGER 
-            elif not posture_setup_complete:
+            # after 25 frames, take the average angles and set thresholds for angles
+
+            elif setup_frames >= 25 and setup_frames < 40:
                 shoulder_threshold = np.mean(initial_shoulder_angles) - 10
                 neck_threshold = np.mean(initial_neck_angles) - 10
                 os.system('clear')           
-                posture_setup_complete = True
+                setup_frames += 1
                 cv2.putText(frame, 
                 f"Setup complete! Shoulder threshold: {shoulder_threshold:.1f} and neck threshold: {neck_threshold:.1f}",
-                (70,80), font, 1, (0,0,0), 2, cv2.LINE_AA)
+                (70,80), font, 1, (0,0,255), 2, cv2.LINE_AA)
       
                 #print(f"Setup complete! Shoulder threshold: {shoulder_threshold:.1f} and neck threshold: {neck_threshold:.1f}")
 
             # Begin posture detection
-            elif posture_setup_complete:
+            else:
                 # poor shoulder posture
                 if shoulder_threshold > shoulder_angle and neck_angle > neck_threshold:
                     cv2.putText(frame,
@@ -190,35 +170,7 @@ while cap.isOpened():
             if (time.time() - (start_time + time_diff)) > 15:
                 start_time = time.time()
 
-            # if person not sitting (not in frame)
-        
-            #     current_time = time.time()
-            #         # just started sitting
-            #     if not sit: 
-            #         start_time = time.time()
-            #         sit = True
-
-            #     sitting(start_time)
-
-            #     else:
-            #         if sit:
-            #             start_time = time.time()
-            #             not_sitting(start_time)
-
-            # if not nose:
-            #     current_time = time.time()
-            #     not_sitting(current_time)
-
-            # if sit:
-            #     current_time = time.time()
-            #     sitting(current_time)
-
-    # Draw object detection boxes
-    # if object_results.detections:
-    #     for detection in object_results.detections:
-    #         mp_drawing.draw_detection(frame, detection)
-
-    # Display the frame
+    #Display the frame
     cv2.imshow('MediaPipe Pose Detection', frame)
 
     # Quit on 'q'
@@ -231,4 +183,5 @@ cv2.destroyAllWindows()
 
 pose.close()
 # object_detection.close()
-# We may need multithreading to have the sit and posture detection run simultaniously
+# try making thresholds a percent instead for usability
+# can then delete the thresholding angles after 25 frames are captured
