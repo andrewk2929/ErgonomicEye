@@ -93,6 +93,7 @@ while cap.isOpened():
     # object_results = object_detection.process(rgb_frame)
 
     # Draw pose landmarks
+    #detects if landmarks are visible
     if pose_results.pose_landmarks:
         mp_drawing.draw_landmarks(
             frame, pose_results.pose_landmarks, mp_pose.POSE_CONNECTIONS
@@ -117,7 +118,7 @@ while cap.isOpened():
         # shoulder_angle = calculate_angle(left_shoulder, nose, right_shoulder)
         # neck_angle = calculate_angle(mid_shoulder, nose, [nose[0], mid_shoulder[1]])
 
-        # Take shoulder and neck angle values for first 25 frames
+        # setting up baseline angles from first 25 frames
         if not posture_setup_complete and setup_frames < 25:
             initial_shoulder_angles.append(shoulder_angle)
             initial_neck_angles.append(neck_angle)
@@ -125,7 +126,8 @@ while cap.isOpened():
             cv2.putText(frame, f"Gathering data... {setup_frames}/25", 
                         (10, 30), font, 1, (0, 0, 0), 2, cv2.LINE_AA)
         
-        # Gather data after test frames
+        # after 25 frames, take the average angles and set thresholds for 
+        # angles
         elif not posture_setup_complete:
             shoulder_threshold = np.mean(initial_shoulder_angles) - 10
             neck_threshold = np.mean(initial_neck_angles) - 10
@@ -134,11 +136,10 @@ while cap.isOpened():
             cv2.putText(frame, 
             f"Setup complete! Shoulder threshold: {shoulder_threshold:.1f} and neck threshold: {neck_threshold:.1f}",
             (70,80), font, 1, (0,0,0), 2, cv2.LINE_AA)
-            print(f"Setup complete! Shoulder threshold: {shoulder_threshold:.1f} and neck threshold: {neck_threshold:.1f}")
+            #print(f"Setup complete! Shoulder threshold: {shoulder_threshold:.1f} and neck threshold: {neck_threshold:.1f}")
 
         # Begin posture detection
         elif posture_setup_complete:
-            current_time = time.time()
             # poor shoulder posture
             if shoulder_threshold > shoulder_angle and neck_angle > neck_threshold:
                 cv2.putText(frame,
@@ -160,8 +161,8 @@ while cap.isOpened():
                 poor_posture_detected()
 
             # if person not sitting (not in frame)
-            while True:
-                if nose:
+            if not nose:
+                current_time = time.time()
                     # just started sitting
                     if not sit: 
                         start_time = time.time()
