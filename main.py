@@ -17,6 +17,8 @@ sit = True
 sedentary = False
 not_sitting_time = 60 # seconds
 sitting_time = 1800
+start_time = time.time()
+time_diff = 0
 alert_cooldown = 15 # seconds
 last_alert_time = 0
 
@@ -66,16 +68,16 @@ def sitting(current_time):
             (50,50), font, 1, (0,0,0), 2, cv2.LINE_AA)
 
 
-# def not_sitting(time):
-#     while not nose:
-#         if time.time() - time > not_sitting_time:
-#             sit = False
-#             break
+def not_sitting(time):
+    while not nose:
+        if time.time() - time > not_sitting_time:
+            sit = False
+            break
 
 # Initialize webcam
 cap = cv2.VideoCapture(0)
-
 while cap.isOpened():
+    keyInput = cv2.waitKey(10)
     ret, frame = cap.read()
 
     if not ret:
@@ -83,7 +85,8 @@ while cap.isOpened():
         break
 
     font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(frame, "Analyzing your good posture", (50,50), font, 1, (0, 0, 0), 2, cv2.LINE_4)
+    if setup_frames < 25: 
+        cv2.putText(frame, "Analyzing your good posture", (50,50), font, 1, (0, 0, 0), 2, cv2.LINE_4)
 
     # Convert BGR image to RGB
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -94,11 +97,24 @@ while cap.isOpened():
 
     # Draw pose landmarks
     #detects if landmarks are visible
+
     if pose_results.pose_landmarks:
         mp_drawing.draw_landmarks(
             frame, pose_results.pose_landmarks, mp_pose.POSE_CONNECTIONS
             )
         
+        #if all landmarks detected for more than set time, you are asked to take a break
+        #there's a snooze option that will reset the timer
+        time_diff = time.time() - start_time 
+        if time_diff> 30:
+            cv2.putText(frame, 
+            "30 Minutes Has Passed, Please Take A Break",
+            (70,80), font, 1, (0,0,0), 2, cv2.LINE_AA)
+            cv2.putText(frame, "Please Press Esc To Reset",
+            (270,280), font, 1, (0,0,0), 2, cv2.LINE_AA)
+            if keyInput == 27:
+                start_time = time.time()
+
         landmarks = pose_results.pose_landmarks.landmark
 
         # Get key body parts
@@ -108,7 +124,7 @@ while cap.isOpened():
                           ,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y * frame.shape[0]]
         nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x * frame.shape[1],
                 landmarks[mp_pose.PoseLandmark.NOSE.value].y * frame.shape[0]]
-
+       
         # Calculate mid point of shoulders
         mid_shoulder = [(left_shoulder[0] + right_shoulder[0]) / 2, (left_shoulder[1] + right_shoulder[1]) / 2]
         
@@ -159,21 +175,25 @@ while cap.isOpened():
                 f"""Poor neck and shoulder posture detected! Please sit up straight. Shoulder: {shoulder_angle:.1f}/{shoulder_threshold:.1f} Neck: {neck_angle:.1f}/{neck_threshold:.1f}""",
                 (100,50), font, 1, (255,0,0), 2, cv2.LINE_4)
                 poor_posture_detected()
+            print (nose, left_shoulder, right_shoulder)
+            
+    else: 
+        print("here")
 
             # if person not sitting (not in frame)
-            if not nose:
-                current_time = time.time()
-                    # just started sitting
-                    if not sit: 
-                        start_time = time.time()
-                        sit = True
+        
+            #     current_time = time.time()
+            #         # just started sitting
+            #     if not sit: 
+            #         start_time = time.time()
+            #         sit = True
 
-                    sitting(start_time)
+            #     sitting(start_time)
 
-                else:
-                    if sit:
-                        start_time = time.time()
-                        not_sitting(start_time)
+            #     else:
+            #         if sit:
+            #             start_time = time.time()
+            #             not_sitting(start_time)
 
             # if not nose:
             #     current_time = time.time()
@@ -182,8 +202,6 @@ while cap.isOpened():
             # if sit:
             #     current_time = time.time()
             #     sitting(current_time)
-
-
 
     # Draw object detection boxes
     # if object_results.detections:
