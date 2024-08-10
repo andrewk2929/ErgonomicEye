@@ -108,7 +108,7 @@ while cap.isOpened():
         time_diff = time.time() - start_time 
         if time_diff> 30:
             cv2.putText(frame, 
-            "30 Minutes Has Passed, Please Take A Break",
+            f"It has been {(time_diff/60):.1f} minutes, Please Take A Break",
             (70,80), font, 1, (0,0,0), 2, cv2.LINE_AA)
             cv2.putText(frame, "Please Press Esc To Reset",
             (270,280), font, 1, (0,0,0), 2, cv2.LINE_AA)
