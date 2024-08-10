@@ -14,6 +14,7 @@ neck_threshold = 0
 # alert/status vars
 alert = 'alert.mp3' # your alert audio
 sit = True
+sedentary = False
 not_sitting_time = 60 # seconds
 sitting_time = 1800
 alert_cooldown = 15 # seconds
@@ -49,15 +50,27 @@ def poor_posture_detected():
         #     playsound(alert)
     #     last_alert_time = current_time
 
-def sitting(time):
-    while nose:
-        if time.time() - time > sitting_time
+def sitting(current_time):
+    while True:
+        if nose:
+            if time.time() - current_time > sitting_time:
+                sedentary = True
+        if not nose:
+            if time.time() - current_time > not_sitting_time:
+                sit = False
+                sedentary = False
+        
+        if sedentary:
+            cv2.putText(frame, 
+            "You've been sitting for over 30 minutes, try and take a 5 minute active break",
+            (50,50), font, 1, (0,0,0), 2, cv2.LINE_AA)
 
-def not_sitting(time):
-    while not nose:
-        if time.time() - time > not_sitting_time:
-            sit = False
-            break
+
+# def not_sitting(time):
+#     while not nose:
+#         if time.time() - time > not_sitting_time:
+#             sit = False
+#             break
 
 # Initialize webcam
 cap = cv2.VideoCapture(0)
@@ -147,13 +160,27 @@ while cap.isOpened():
                 poor_posture_detected()
 
             # if person not sitting (not in frame)
-            if not nose:
-                current_time = time.time()
-                not_sitting(current_time)
+            while True:
+                if nose:
+                    # just started sitting
+                    if not sit: 
+                        start_time = time.time()
+                        sit = True
 
-            if sit:
-                current_time = time.time()
-                sitting(current_time)
+                    sitting(start_time)
+
+                else:
+                    if sit:
+                        start_time = time.time()
+                        not_sitting(start_time)
+
+            # if not nose:
+            #     current_time = time.time()
+            #     not_sitting(current_time)
+
+            # if sit:
+            #     current_time = time.time()
+            #     sitting(current_time)
 
 
 
@@ -175,5 +202,4 @@ cv2.destroyAllWindows()
 
 pose.close()
 # object_detection.close()
-
-##testing to see if it works
+# We may need multithreading to have the sit and posture detection run simultaniously
