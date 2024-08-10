@@ -4,6 +4,7 @@ import numpy as np
 import time, os
 
 # setup vars
+font = cv2.FONT_HERSHEY_SIMPLEX
 posture_setup_complete = False
 setup_frames = 0
 initial_shoulder_angles = []
@@ -84,7 +85,6 @@ while cap.isOpened():
         print("Failed to grab frame")
         break
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
     if setup_frames < 25: 
         cv2.putText(frame, "Analyzing your good posture", (50,50), font, 1, (0, 0, 0), 2, cv2.LINE_4)
 
@@ -106,7 +106,7 @@ while cap.isOpened():
         #if all landmarks detected for more than set time, you are asked to take a break
         #there's a snooze option that will reset the timer
         time_diff = time.time() - start_time 
-        if time_diff> 30:
+        if time_diff > 30:
             cv2.putText(frame, 
             f"It has been {(time_diff/60):.1f} minutes, Please Take A Break",
             (70,80), font, 1, (0,0,0), 2, cv2.LINE_AA)
@@ -178,7 +178,8 @@ while cap.isOpened():
             print (nose, left_shoulder, right_shoulder)
             
     else: 
-        print("here")
+        if (time.time() - (start_time + time_diff)) > 15:
+            start_time = time.time()
 
             # if person not sitting (not in frame)
         
