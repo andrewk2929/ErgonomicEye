@@ -82,7 +82,8 @@ def main():
 
     # play alert sound 
     def ping_user(current):
-        print("BEEP")
+        pass
+        # print("BEEP")
         # global pinged
         # # pass
         # if pinged:
