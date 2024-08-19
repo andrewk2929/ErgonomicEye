@@ -25,7 +25,7 @@ sedentary_threshold = st.select_slider(
 alert_type = st.selectbox("Choose alert type", ["Auditory and Visual", "Visual"])
 st.text("Auditory and Visual warning recommended")
 
-st.subheader("Please sit straight. When ready hit start.")
+st.subheader("Please sit straight. When ready hit start to begin your posture analysis.")
 
 if 'started' not in st.session_state:
     st.session_state.started = False
@@ -33,25 +33,31 @@ if 'started' not in st.session_state:
 
 ### OPENCV SETUP
 def main():
+    st.session_state.started = True
+
     # setup vars
     font = cv2.FONT_HERSHEY_SIMPLEX
-    posture_setup_complete = False
+    # posture_setup_complete = False
     setup_frames = 0
     initial_shoulder_angles = []
     initial_neck_angles = []
+    neck_slopes = []
+    shoulder_slopes = []
     shoulder_threshold = 0
     neck_threshold = 0
 
     # alert/status vars
-    ready_to_start = False
-    sit = True
-    sedentary = False
+    # ready_to_start = False
+    # sit = True
+    # sedentary = False
     active_threshold = 60 # seconds
     start_time = time.time()
     time_diff = 0
-    key_count = 0
-    alert_cooldown = 15 # seconds
+    # key_count = 0
+    alert_cooldown = 2 # seconds
     last_alert_time = 0
+    pinged = False
+    curr = 0
 
     # Initialize Mediapipe Pose
     mp_pose = mp.solutions.pose
@@ -75,14 +81,24 @@ def main():
         return angle 
 
     # play alert sound 
-    def ping_user():
-        pass
-        # os.system('clear')
-        # global last_alert_time
-        # if time.time() - last_alert_time > alert_cooldown:
-        #     if os.path.exists("alert.mp3"):
+    def ping_user(current):
+        print("BEEP")
+        # global pinged
+        # # pass
+        # if pinged:
+        #     if (time.time() - (curr)) > alert_cooldown:
+        #         os.system('clear')
         #         print("BEEP ALERT ALERT")
-        #     last_alert_time = time.time()
+        #         st.write("BEEEP")
+        # else:
+        #     if (time.time() - (current)) > alert_cooldown and not pinged:
+        #         # if os.path.exists("alert.mp3"):
+        #         os.system('clear')
+        #         print("BEEP ALERT ALERT")
+        #         st.write("BEEEP")
+        #     else:
+        #         pinged = True
+        #         curr = current
 
     # Initialize webcam
     cap = cv2.VideoCapture(0)
@@ -126,9 +142,9 @@ def main():
             if time_diff > sedentary_threshold:
                 cv2.putText(frame, 
                 f"It has been {round(time_diff/60)} minutes, Please Take A Break",
-                (250,50), font, 1, (0,0,255), 2, cv2.LINE_AA)
+                (250,150), font, 1, (0,0,255), 2, cv2.LINE_AA)
                 if alert_type in ["Auditory and Visual"]:
-                    ping_user()
+                    ping_user(time.time())
                 # sedentary(time_diff)
                 # if st.button("Snooze", key = "snooze_btn"):
                 #     start_time = time.time()
@@ -150,22 +166,61 @@ def main():
             shoulder_angle = 180 - calculate_angle(left_shoulder, nose, right_shoulder)
             neck_angle = calculate_angle(mid_shoulder, nose, [nose[0], 0])
 
+            # Calculate slopes (see if neck or shoulders are slanted)
+            neck_slope = ((mid_shoulder[1] - nose[1])/(mid_shoulder[0] - nose[0])) # slope between nose and mid shoulder
+            shoulder_slope = ((right_shoulder[1] - left_shoulder[1])/(right_shoulder[0]-left_shoulder[0]))
+
             # setting up baseline angles from first 25 frames
             if setup_frames < 25:
+                # append curr angles
                 initial_shoulder_angles.append(shoulder_angle)
                 initial_neck_angles.append(neck_angle)
+                neck_slopes.append(neck_slope)
+                shoulder_slopes.append(shoulder_slope)
+
                 setup_frames += 1
                 cv2.putText(frame, f"Gathering data... {setup_frames}/25", 
                             (10, 30), font, 1, (255, 0, 0), 2, cv2.LINE_AA)
             
             # after 25 frames, take the average angles and set thresholds for angles
-            elif setup_frames >= 25 and setup_frames < 40:
+            elif setup_frames >= 25 and setup_frames < 100:
                 shoulder_threshold = np.mean(initial_shoulder_angles) - 10
                 neck_threshold = np.mean(initial_neck_angles) - 10
+
+                avg_shoulder_slope = np.mean(shoulder_slopes)
+                avg_neck_slope = np.mean(neck_slopes)
+
+                if 0 > avg_neck_slope > -6.5:
+                    cv2.putText(frame, 
+                f"""NOTE NECK CROOKED TO THE LEFT
+                Press start to recalibrate, ignore to continue.""",
+                (70,80), font, 1, (255,0,0), 2, cv2.LINE_AA)
+                
+                elif 0 < avg_neck_slope < 2.3:
+                    cv2.putText(frame, 
+                f"""NOTE NECK CROOKED TO THE RIGHT
+                Press start to recalibrate, ignore to continue.""",
+                (70,80), font, 1, (255,0,0), 2, cv2.LINE_AA)
+                    
+                if avg_shoulder_slope >= 0.1:
+                    cv2.putText(frame, 
+                f"""NOTE RIGHT SHOULDER HIGHER THAN LEFT SHOULDER
+                Press start to recalibrate, ignore to continue.""",
+                (70,280), font, 1, (255,0,0), 2, cv2.LINE_AA)
+                    
+                elif avg_shoulder_slope <= -0.1:
+                    cv2.putText(frame, 
+                f"""NOTE LEFT SHOULDER HIGHER THAN RIGHT SHOULDER
+                Press start to recalibrate, ignore to continue.""",
+                (70,280), font, 1, (255,0,0), 2, cv2.LINE_AA)
+
                 setup_frames += 1
+                # cv2.putText(frame, 
+                # f"Setup complete! Shoulder threshold: {shoulder_threshold:.1f} and neck threshold: {neck_threshold:.1f}",
+                # (70,280), font, 1, (0,255,0), 2, cv2.LINE_AA)
                 cv2.putText(frame, 
-                f"Setup complete! Shoulder threshold: {shoulder_threshold:.1f} and neck threshold: {neck_threshold:.1f}",
-                (70,80), font, 1, (0,255,0), 2, cv2.LINE_AA)
+                f"Setup complete! Shoulder slopes: {avg_shoulder_slope:.1f} and neck slopes: {avg_neck_slope:.1f}",
+                (270,280), font, 1, (0,255,0), 2, cv2.LINE_AA)
 
             # Begin posture detection
             else:
@@ -175,7 +230,7 @@ def main():
                     f"Poor shoulder posture detected! Please sit up straight. {shoulder_angle:.1f}/{shoulder_threshold:.1f}",
                     (100,50), font, 1, (0,0,255), 2, cv2.LINE_4)
                     if alert_type in ["Auditory and Visual"]:
-                        ping_user()
+                        ping_user(time.time())
                 
                 # poor neck posture
                 if neck_threshold > neck_angle and shoulder_angle > shoulder_threshold:
@@ -183,7 +238,7 @@ def main():
                     f"Poor neck posture detected! Please sit up straight. {neck_angle:.1f}/{neck_threshold:.1f}",
                     (100,50), font, 1, (0,0,255), 2, cv2.LINE_4)
                     if alert_type in ["Auditory and Visual"]:
-                        ping_user()
+                        ping_user(time.time())
 
                 # poor shoulder and neck posture
                 if shoulder_threshold > shoulder_angle and neck_threshold > neck_angle:
@@ -191,7 +246,7 @@ def main():
                     f"Poor neck and shoulder posture detected! Please sit up straight. Shoulder: {shoulder_angle:.1f}/{shoulder_threshold:.1f} Neck: {neck_angle:.1f}/{neck_threshold:.1f}",
                     (100,50), font, 1, (0,0,255), 2, cv2.LINE_4)
                     if alert_type in ["Auditory and Visual"]:
-                        ping_user()
+                        ping_user(time.time())
                 
         else: 
             if setup_frames < 25:
@@ -214,23 +269,25 @@ def main():
 
 ### END OF POSE AND SEDENTARY ANALYSIS
 
+# 9 columns so col1 and col2 are closer (meaning buttons are closer)
 col1, col2, col3, col4, col5, col6, col7, col8, col9 = st.columns(9)
 
+st.session_state.started = False
+
+# start btn
 with col1:
     start_btn = st.button("Start", type = "primary", key = "start_btn", disabled = st.session_state.started)
 
-with col2:
-    reset_btn = st.button("Reset", type="secondary", key="reset_btn", disabled= not st.session_state.started)
+stop_btn = False
 
-with col3:
-    stop_btn = st.button("Stop", type="primary", key = "stop_btn", disabled= not st.session_state.started)
-
+# make stop btn appear when start btn pressed
 if start_btn:
-    st.info("Press the Reset button to recalibrate the model and press the Stop button to exit")
-    st.session_state.started = True
-    main()
+    with col2:
+        stop_btn = st.button("Stop", type="primary", key = "stop_btn", disabled= False)
+    st.info("Press the Start button to recalibrate and the Stop button to exit")
 
-if reset_btn:
+    # start
+    st.session_state.started = True
     main()
 
 if stop_btn:
@@ -242,3 +299,4 @@ if stop_btn:
 # can then delete the thresholding angles after 25 frames are captured
 # make an option to press a key to reevaluate thresholds (restart get another 25 frames) reset btn
 # maybe add an option to remove the dots on the opencv window
+# not working cuz time.time() for the ping user gets updated every frame
