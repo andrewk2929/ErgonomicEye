@@ -1,0 +1,58 @@
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.settings-block h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.settings-hint {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+.toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toggle-chip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toggle-chip:hover {
+  border-color: var(--sage-dim);
+  color: var(--text);
+}
+
+.toggle-chip.on {
+  background: var(--sage-dim);
+  border-color: var(--sage);
+  color: var(--text);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--sage);
+}
+
+.range-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}

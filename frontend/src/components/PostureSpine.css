@@ -1,0 +1,33 @@
+.spine-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.spine-svg {
+  width: 100px;
+  height: 130px;
+}
+
+.spine-guide {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.spine-head,
+.spine-body {
+  transition: fill 0.4s ease, stroke 0.4s ease;
+}
+
+.spine-svg g {
+  transition: transform 0.35s cubic-bezier(0.34, 1.2, 0.4, 1);
+}
+
+.spine-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

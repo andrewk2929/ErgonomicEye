@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap");
+
+:root {
+  --bg: #161e1b;
+  --bg-elevated: #1d2724;
+  --bg-card: #212c28;
+  --line: #2d3a35;
+
+  --text: #f2efe6;
+  --text-dim: #a9b3ac;
+  --text-faint: #6c766f;
+
+  --sage: #7c9885;
+  --sage-dim: #4f6657;
+  --clay: #c77b5c;
+  --clay-dim: #6e4334;
+  --gold: #d4a857;
+  --gold-dim: #6b5630;
+
+  --font-display: "Fraunces", serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100vh;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--sage-dim);
+}
+
+:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
