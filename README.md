@@ -1,21 +1,9 @@
 # ErgonomicEye 2.0
 
 Real-time posture and sedentary-behavior monitoring that actually works as a
-deployed website.
+deployed website. 
 
-## Why the original didn't deploy
-
-The Streamlit version called `cv2.VideoCapture(0)`, which opens the webcam on
-whatever machine is *running the Python process*. On a deployed server,
-that's the server, not the visitor — so it could only ever work when you
-personally ran it locally. Streamlit's full-script rerun model also fights a
-`while True` capture loop.
-
-The fix: pose detection has to run **in the visitor's own browser**, where
-the camera actually lives. This rebuild uses MediaPipe's `tasks-vision`
-(WASM/JS) build client-side in React, with a small FastAPI + SQLite backend
-for calibration, alert history, and analytics — matching the architecture in
-your outline.
+# Deployed at [https://ergonomic-eye.vercel.app/](url)
 
 ## Project structure
 
@@ -94,25 +82,4 @@ sit up straight, and hit **Start**.
   bundle or self-host them, but it does mean the first load needs internet
   access (fine for any normal deployment).
 
-## Next steps / what I'd add next
-
-- **Weekly trend chart in the UI** — the backend endpoint exists
-  (`/api/analytics/weekly/{session_id}`), just needs a `recharts` line chart
-  component on a `/dashboard` route.
-- **AI coaching layer** (per your outline) — a single API call. Take the
-  `issue` + recent alert history from `/api/analytics/daily` and pass it to
-  Claude or OpenAI with a prompt like "explain why this matters and suggest
-  one concrete desk/monitor adjustment." Swap the static `ISSUE_COPY` tips in
-  `lib/posture.js` for a generated one, falling back to the static copy if
-  the API call fails.
-- **Pattern discovery** — once you have a few days of `posture_events` in
-  SQLite, a scheduled job (or just a button) that buckets alerts by hour of
-  day would directly answer "when do I slip the most."
-- **Auth / multi-user** — right now `session_id` is a UUID stuck in
-  `localStorage`, which is enough for a single-user deploy but won't survive
-  a cleared browser or a second device. Real accounts would need actual auth
-  before this scales past "just for me."
-- **Recalibration button** — useful if you change chairs/desks mid-day;
-  currently you have to Stop and Start again, which works but isn't labeled
-  as a recalibration action.
 # ErgonomicEye
